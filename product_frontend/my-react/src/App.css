@@ -1,0 +1,65 @@
+.App {
+  text-align: center;
+}
+
+.content-wrapper {
+  max-width: 1100px;
+  margin: 30px auto 0 auto;
+  padding: 0 15px;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+th, td {
+  padding: 10px 8px;
+}
+
+form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 30px;
+  font-size: 1.2em;
+  border-radius: 16px;
+}
+
+input[type="text"], input[type="number"], input[type="range"] {
+  padding: 10px 14px;
+  font-size: 1.1em;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 12px 22px;
+  font-size: 1.1em;
+  border-radius: 8px;
+  border: none;
+  background: #1976d2;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+button:disabled {
+  background: #b0b0b0;
+  cursor: not-allowed;
+}
+button:not(:disabled):hover {
+  background: #125ea2;
+}
+
+.chart-container {
+  border-radius: 16px;
+  background: #fafbfc;
+  padding: 20px 10px 10px 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
