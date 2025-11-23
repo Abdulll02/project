@@ -43,28 +43,53 @@ function App() {
   return (
     <div className="App">
       <div className="content-wrapper">
-        <form onSubmit={handleParse} style={{ marginBottom: '20px' }}>
-          <input
-            type="text"
-            placeholder="Введите товар для парсинга"
-            value={parseQuery}
-            onChange={e => setParseQuery(e.target.value)}
-            disabled={parsing}
-            required
-          />
-          <button type="submit" disabled={parsing || !parseQuery}>
-            {parsing ? 'Парсинг...' : 'Запустить парсинг'}
-          </button>
-          <button type="button" onClick={handleClear} disabled={parsing} style={{ marginLeft: '10px' }}>
-            Очистить таблицу
-          </button>
-        </form>
-        {parsing && <div>Парсинг выполняется, пожалуйста, подождите...</div>}
-        {parseError && <div style={{ color: 'red' }}>{parseError}</div>}
-        {parseSuccess && <div style={{ color: 'green' }}>Парсинг завершён!</div>}
-        {clearError && <div style={{ color: 'red' }}>{clearError}</div>}
-        {clearSuccess && <div style={{ color: 'green' }}>Таблица очищена!</div>}
-        <ProductTable reload={reloadTable} />
+        <header className="header">
+          <div className="brand">
+            <div className="logo">PA</div>
+            <div>
+              <h1>Product Analytics</h1>
+              <p>Парсер Wildberries — интерфейс управления</p>
+            </div>
+          </div>
+          <div className="controls">
+            <div className="panel form-row">
+              <form onSubmit={handleParse} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Введите товар для парсинга"
+                  value={parseQuery}
+                  onChange={e => setParseQuery(e.target.value)}
+                  disabled={parsing}
+                  required
+                />
+                <button type="submit" disabled={parsing || !parseQuery}>
+                  {parsing ? 'Парсинг...' : 'Запустить'}
+                </button>
+              </form>
+              <button className="secondary" type="button" onClick={handleClear} disabled={parsing} style={{ marginLeft: '8px' }}>
+                Очистить
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div style={{ marginTop: 12 }}>
+          {parsing && <div className="panel" style={{ color: 'var(--accent)' }}>Парсинг выполняется, пожалуйста, подождите...</div>}
+          {parseError && <div className="panel" style={{ color: '#ff8b8b' }}>{parseError}</div>}
+          {parseSuccess && <div className="panel" style={{ color: '#9ef6c9' }}>Парсинг завершён!</div>}
+          {clearError && <div className="panel" style={{ color: '#ff8b8b' }}>{clearError}</div>}
+          {clearSuccess && <div className="panel" style={{ color: '#9ef6c9' }}>Таблица очищена!</div>}
+        </div>
+
+        <div className="grid">
+          <main className="main-card">
+            <ProductTable reload={reloadTable} />
+          </main>
+          <aside className="charts-panel panel">
+            <h3 style={{margin:'6px 0 12px 0'}}>Аналитика</h3>
+            <p style={{color:'var(--muted)',fontSize:13}}>Здесь будут графики и дополнительные фильтры.</p>
+          </aside>
+        </div>
       </div>
     </div>
   );

@@ -1,65 +1,95 @@
-.App {
-  text-align: center;
+:root{
+  --bg: #5d85c4; /* deep navy */
+  --card: #081026;
+  --muted: #94a3b8;
+  --accent: #5eead4; /* teal */
+  --primary: #60a5fa;
+  --surface: #081026;
+  --glass: rgba(255, 255, 255, 0.03);
 }
 
-.content-wrapper {
-  max-width: 1100px;
-  margin: 30px auto 0 auto;
-  padding: 0 15px;
+.App{
+  min-height:100vh;
+  background: linear-gradient(180deg,var(--bg), #071024 120%);
+  color: #e6eef8;
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: 16px;
-  overflow: hidden;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-}
-th, td {
-  padding: 10px 8px;
+.content-wrapper{
+  max-width:1200px;
+  margin:28px auto;
+  padding:20px;
 }
 
-form {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 30px;
-  font-size: 1.2em;
-  border-radius: 16px;
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
 }
 
-input[type="text"], input[type="number"], input[type="range"] {
-  padding: 10px 14px;
-  font-size: 1.1em;
-  border-radius: 8px;
-  border: 1px solid #ccc;
+.brand{
+  display:none;
+  gap:12px;
+  align-items:center;
+}
+.brand .logo{
+  width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:700;color:#021124;font-size:18px
+}
+.brand h1{font-size:20px;margin:0}
+.brand p{margin:0;color:var(--muted);font-size:13px}
+
+.controls{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center
 }
 
-button {
-  padding: 12px 22px;
-  font-size: 1.1em;
-  border-radius: 8px;
-  border: none;
-  background: #1976d2;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-button:disabled {
-  background: #b0b0b0;
-  cursor: not-allowed;
-}
-button:not(:disabled):hover {
-  background: #125ea2;
+.panel{
+  background:var(--card);
+  border-radius:12px;
+  padding:12px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.6);
 }
 
-.chart-container {
-  border-radius: 16px;
-  background: #fafbfc;
-  padding: 20px 10px 10px 10px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+.form-row{display:flex;gap:8px;align-items:center}
+
+input[type="text"], input[type="number"], select{
+  padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit;min-width:200px
 }
+
+button{
+  padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--primary),#3b82f6);color:#021124;font-weight:600;cursor:pointer;box-shadow:0 6px 14px rgba(59,130,246,0.12)
+}
+button.secondary{background:transparent;color:var(--accent);border:1px solid rgba(255,255,255,0.04)}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+
+.grid{display:grid;grid-template-columns:1fr;gap:18px}
+
+.main-card{background:var(--surface);padding:14px;border-radius:12px}
+
+/* table styles */
+table.app-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden}
+table.app-table thead{background:linear-gradient(90deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))}
+table.app-table th, table.app-table td{padding:12px 14px;text-align:left;font-size:14px;color:#e6eef8}
+table.app-table tbody tr{border-bottom:1px solid rgba(255,255,255,0.03);}
+table.app-table tbody tr:last-child{border-bottom:none}
+table.app-table th{cursor:pointer;color:var(--muted);font-weight:600;font-size:13px}
+
+/* card view */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{background:var(--card);padding:12px;border-radius:10px;display:flex;flex-direction:column;gap:8px}
+.card .title{font-weight:700}
+.card .meta{color:var(--muted);font-size:13px}
+.price{font-weight:800;color:var(--accent)}
+
+.empty{padding:36px;text-align:center;color:var(--muted)}
+
+.toolbar{display:flex;gap:8px;align-items:center}
+
+.charts-panel{display:none;background:var(--glass);padding:12px;border-radius:10px}
+
+@media (max-width:900px){.grid{grid-template-columns:1fr}
+.brand h1{font-size:16px}}
+

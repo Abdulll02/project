@@ -6,13 +6,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from .models import Product
 import time
+import re
+import os
 
 def parse_products(query):
     # Очистка таблицы перед новым парсингом
     Product.objects.all().delete()
 
     options = Options()
-    options.add_argument('--headless')  # Без открытия окна браузера
+    # Если нужно видеть браузер при отладке, установите переменную окружения SHOW_BROWSER=1
+    if os.environ.get('SHOW_BROWSER') != '1':
+        options.add_argument('--headless')  # Без открытия окна браузера
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
@@ -28,8 +32,9 @@ def parse_products(query):
                 url = f'https://www.wildberries.ru/catalog/0/search.aspx?search={query}&page={page}'
             driver.get(url)
             try:
+                # Ожидаем загрузки карточек товаров (контейнеры — article[data-nm-id] или .product-card__wrapper)
                 WebDriverWait(driver, 15).until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, '.product-card__wrapper'))
+                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'article[data-nm-id], .product-card__wrapper'))
                 )
             except Exception as e:
                 print(f"Не удалось дождаться карточек товаров: {e}")
@@ -46,36 +51,74 @@ def parse_products(query):
                 last_height = new_height
             # --- Конец прокрутки ---
             html = driver.page_source
+            # Сохраняем HTML страницы в отладочный файл, чтобы можно было проинспектировать разметку
+            try:
+                debug_path = os.path.join(os.path.dirname(__file__), '..', 'wb_debug.html')
+                with open(debug_path, 'w', encoding='utf-8') as f:
+                    f.write(html)
+                print(f"Сохранён HTML страницы для отладки: {debug_path}")
+            except Exception as e:
+                print(f"Не удалось сохранить debug HTML: {e}")
             soup = BeautifulSoup(html, 'html.parser')
             items_on_page = 0
-            for item in soup.select('.product-card__wrapper'):
-                title = item.select_one('.product-card__name')
-                price = item.select_one('.price__lower-price')
-                discount_price = item.select_one('del')
-                rating = item.select_one('.address-rate-mini')
-                reviews_count = item.select_one('.product-card__count')
+            
+            # Новые селекторы для актуальной структуры Wildberries (основано на wb_debug.html)
+            for item in soup.select('article[data-nm-id], .product-card__wrapper'):
+                # Название товара
+                title = item.select_one('span.product-card__name, .product-card__name')
+                # Цена (нижняя цена — текущая цена, часто в теге <ins class="price__lower-price">)
+                price = item.select_one('ins.price__lower-price, .price__lower-price, .price__wrap ins, .price__wrap .price__lower-price')
+                # Цена без скидки (если есть)
+                discount_price = item.select_one('del, .price__old')
+                # Рейтинг
+                rating = item.select_one('span.address-rate-mini, .address-rate-mini, .rating')
+                # Количество отзывов
+                reviews_count = item.select_one('span.product-card__count, .product-card__count, .feedback-count')
 
-                if not (title and price and rating and reviews_count):
+                if not (title and price):
                     continue
 
-                title_text = title.text.strip()
+                title_text = title.get_text(separator=' ', strip=True)
                 # Фильтрация по наличию слова из запроса в названии
                 if query_lower not in title_text.lower():
                     continue
 
-                price_value = float(price.text.strip().replace('₽','').replace('\xa0','').replace(' ',''))
-                discount_price_value = float(discount_price.text.strip().replace('₽', '').replace('\xa0','').replace(' ', '')) if discount_price else None
-                rating_text = rating.text.strip().replace(',', '.')
                 try:
-                    rating_value = float(rating_text)
-                except ValueError:
-                    continue  # если рейтинг не число — пропустить товар
-                if rating_value is None:
-                    continue  # если рейтинг не определён — пропустить товар
-                reviews_text = reviews_count.text.strip().replace('\xa0','').replace(' ', '')
+                    price_text = price.get_text(' ', strip=True)
+                    # Оставляем только цифры и точку
+                    price_clean = re.sub(r'[^0-9\.]', '', price_text)
+                    price_value = float(price_clean) if price_clean else 0
+                except (ValueError, AttributeError):
+                    continue
+
                 try:
-                    reviews_value = int(''.join(filter(str.isdigit, reviews_text)))
-                except ValueError:
+                    if discount_price:
+                        discount_text = discount_price.get_text(' ', strip=True)
+                        discount_clean = re.sub(r'[^0-9\.]', '', discount_text)
+                        discount_price_value = float(discount_clean) if discount_clean else None
+                    else:
+                        discount_price_value = None
+                except (ValueError, AttributeError):
+                    discount_price_value = None
+
+                try:
+                    if rating:
+                        rating_text = rating.get_text(' ', strip=True).replace(',', '.')
+                        rating_match = re.search(r'(\d+\.?\d*)', rating_text)
+                        rating_value = float(rating_match.group(1)) if rating_match else 0
+                    else:
+                        rating_value = 0
+                except (ValueError, AttributeError):
+                    rating_value = 0
+
+                try:
+                    if reviews_count:
+                        reviews_text = reviews_count.get_text(' ', strip=True)
+                        reviews_digits = re.sub(r'[^0-9]', '', reviews_text)
+                        reviews_value = int(reviews_digits) if reviews_digits else 0
+                    else:
+                        reviews_value = 0
+                except (ValueError, AttributeError):
                     reviews_value = 0
 
                 product = Product(

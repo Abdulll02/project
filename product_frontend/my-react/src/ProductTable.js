@@ -11,9 +11,12 @@ const ProductTable = ({ reload }) => {
     const [minReviews, setMinReviews] = useState(0);
     const [sortField, setSortField] = useState('');
     const [sortOrder, setSortOrder] = useState('asc');
+    const [loading, setLoading] = useState(false);
+    const [view, setView] = useState('table'); // 'table' or 'cards'
 
     useEffect(() => {
         const fetchProducts = async () => {
+            setLoading(true);
             try {
                 const response = await axios.get('http://127.0.0.1:8000/api/products/', {
                     params: {
@@ -27,6 +30,8 @@ const ProductTable = ({ reload }) => {
             } catch (error) {
                 console.error('Ошибка при получении товаров:', error);
                 setProducts([]);
+            } finally {
+                setLoading(false);
             }
         };
         fetchProducts();
@@ -64,52 +69,89 @@ const ProductTable = ({ reload }) => {
 
     return (
         <div>
-            <h1>Товары</h1>
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                <label>
-                    Цена от:
-                    <input type='range' min='0' max='100000' value={minPrice} onChange={e => setMinPrice(Number(e.target.value))} />
-                    {minPrice}
-                </label>
-                <label>
-                    Цена до:
-                    <input type='range' min='0' max='100000' value={maxPrice} onChange={e => setMaxPrice(Number(e.target.value))} />
-                    {maxPrice}
-                </label>
-                <label>
-                    Мин. рейтинг:
-                    <input type='number' value={minRating} onChange={e => setMinRating(Number(e.target.value))} step='0.1' min='0' max='5' />
-                </label>
-                <label>
-                    Мин. отзывов:
-                    <input type='number' value={minReviews} onChange={e => setMinReviews(Number(e.target.value))} min='0' />
-                </label>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                <h2 style={{margin:0}}>Товары</h2>
+                <div className="toolbar">
+                    <div style={{color:'var(--muted)',fontSize:13}}>Вид:</div>
+                    <button onClick={() => setView('table')} className={view==='table' ? '' : 'secondary'}>Таблица</button>
+                    <button onClick={() => setView('cards')} className={view==='cards' ? '' : 'secondary'}>Карточки</button>
+                </div>
             </div>
-            <table border="1" cellPadding="5" style={{ width: '100%', marginBottom: '20px' }}>
-                <thead>
-                    <tr>
-                        <th onClick={() => handleSort('title')}>Название товара</th>
-                        <th onClick={() => handleSort('price')}>Цена</th>
-                        <th onClick={() => handleSort('discount_price')}>Цена без скидки</th>
-                        <th onClick={() => handleSort('rating')}>Рейтинг</th>
-                        <th onClick={() => handleSort('reviews_count')}>Количество отзывов</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {sortedProducts
-                        .filter(p => p.price <= maxPrice)
-                        .map(product => (
-                        <tr key={product.id}>
-                            <td>{product.title}</td>
-                            <td>{product.price}</td>
-                            <td>{product.discount_price}</td>
-                            <td>{product.rating}</td>
-                            <td>{product.reviews_count}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <Charts data={{ priceRanges, priceCounts, discountRanges: discountAmounts, discountRatings }} />
+
+            <div className="panel filters" style={{marginBottom:12}}>
+                <div>
+                    <label style={{display:'block',color:'var(--muted)',fontSize:13}}>Цена от</label>
+                    <input type='number' value={minPrice} onChange={e => setMinPrice(Number(e.target.value))} />
+                </div>
+                <div>
+                    <label style={{display:'block',color:'var(--muted)',fontSize:13}}>До</label>
+                    <input type='number' value={maxPrice} onChange={e => setMaxPrice(Number(e.target.value))} />
+                </div>
+                <div>
+                    <label style={{display:'block',color:'var(--muted)',fontSize:13}}>Мин. рейтинг</label>
+                    <input type='number' value={minRating} onChange={e => setMinRating(Number(e.target.value))} step='0.1' min='0' max='5' />
+                </div>
+                <div>
+                    <label style={{display:'block',color:'var(--muted)',fontSize:13}}>Мин. отзывов</label>
+                    <input type='number' value={minReviews} onChange={e => setMinReviews(Number(e.target.value))} min='0' />
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="main-card panel" style={{padding:18}}>
+                    <div style={{height:8,background:'rgba(255,255,255,0.03)',borderRadius:6,marginBottom:8}} />
+                    <div style={{height:8,background:'rgba(255,255,255,0.03)',borderRadius:6,marginBottom:8}} />
+                    <div style={{height:8,background:'rgba(255,255,255,0.03)',borderRadius:6,width:'60%'}} />
+                </div>
+            ) : (
+                <>
+                    {view === 'table' ? (
+                        <table className="app-table" style={{marginBottom:16}}>
+                            <thead>
+                                <tr>
+                                    <th onClick={() => handleSort('title')}>Название</th>
+                                    <th onClick={() => handleSort('price')}>Цена</th>
+                                    <th onClick={() => handleSort('discount_price')}>Цена без скидки</th>
+                                    <th onClick={() => handleSort('rating')}>Рейтинг</th>
+                                    <th onClick={() => handleSort('reviews_count')}>Отзывы</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedProducts.filter(p => p.price <= maxPrice).map(product => (
+                                    <tr key={product.id}>
+                                        <td style={{maxWidth:420}}>{product.title}</td>
+                                        <td className="price">{product.price ? `${product.price} ₽` : '-'}</td>
+                                        <td>{product.discount_price ? `${product.discount_price} ₽` : '-'}</td>
+                                        <td>{product.rating ?? '-'}</td>
+                                        <td>{product.reviews_count ?? '-'}</td>
+                                    </tr>
+                                ))}
+                                {sortedProducts.length === 0 && (
+                                    <tr><td colSpan={5} className="empty">Список пуст — попробуйте изменить фильтры</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div className="cards">
+                            {sortedProducts.filter(p => p.price <= maxPrice).map(product => (
+                                <div className="card" key={product.id}>
+                                    <div className="title">{product.title}</div>
+                                    <div className="meta">Рейтинг: {product.rating ?? '-'} · Отзывов: {product.reviews_count ?? '-'}</div>
+                                    <div style={{marginTop:'auto',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                                        <div className="price">{product.price ? `${product.price} ₽` : '-'}</div>
+                                        <div style={{color:'var(--muted)',fontSize:12}}>{product.discount_price ? `до ${product.discount_price} ₽` : ''}</div>
+                                    </div>
+                                </div>
+                            ))}
+                            {sortedProducts.length === 0 && <div className="empty">Пусто</div>}
+                        </div>
+                    )}
+                </>
+            )}
+
+            <div style={{marginTop:18}}>
+                <Charts data={{ priceRanges, priceCounts, discountRanges: discountAmounts, discountRatings }} />
+            </div>
         </div>
     );
 };

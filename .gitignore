@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 *.pyo
 debug.html
+wb_debug.html
+node_modules/
